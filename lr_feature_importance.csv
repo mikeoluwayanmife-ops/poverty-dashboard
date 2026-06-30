@@ -1,8 +1,3 @@
-Feature,Importance
-education_level,4.712535470316826
-household_size,3.5011864916480326
-internet_access,3.2018156019988333
-access_electricity,3.0215536942639134
-distance_to_hospital,1.3231645804043803
-water_source_improved,0.0
-employed,0.0
+version https://git-lfs.github.com/spec/v1
+oid sha256:52821d7f5515fa93ae17fd94ba45ecdfff92731f289ac9907281183c0630cc9b
+size 239

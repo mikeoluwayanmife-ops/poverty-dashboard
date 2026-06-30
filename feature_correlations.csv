@@ -1,8 +1,3 @@
-Feature,Correlation
-household_size,0.07983290956612116
-distance_to_hospital,-0.1444972782122186
-access_electricity,-0.41176790863534624
-internet_access,-0.4140062086111621
-education_level,-0.6494160376741275
-water_source_improved,
-employed,
+version https://git-lfs.github.com/spec/v1
+oid sha256:3a635b976cf087603a981192155e8ecb8aa5942c275c14d15aa5112eafc39147
+size 241
