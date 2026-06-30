@@ -1,14 +1,8 @@
 # ============================================
-# DEBUG: LIST FILES
+# FILENAME: app.py
+# NIGERIA POVERTY PREDICTION DASHBOARD
+# Powered by Explainable Boosting Machine (EBM)
 # ============================================
-
-import os
-st.write("### 🔍 Debug Info")
-st.write(f"Current directory: {os.getcwd()}")
-files = os.listdir('.')
-st.write(f"Files in directory: {files}")
-
-# UPDATED: June 30, 2026 - Fixed syntax errors
 
 import streamlit as st
 import pandas as pd
@@ -23,6 +17,18 @@ import os
 import sys
 import warnings
 warnings.filterwarnings('ignore')
+
+# ============================================
+# DEBUG: LIST FILES (AFTER IMPORTS)
+# ============================================
+
+st.write("### 🔍 Debug Info")
+st.write(f"Current directory: {os.getcwd()}")
+try:
+    files = os.listdir('.')
+    st.write(f"Files in directory: {files}")
+except Exception as e:
+    st.write(f"Error listing files: {e}")
 
 # ============================================
 # PAGE CONFIGURATION
@@ -72,7 +78,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================================
-# LOAD DATA AND MODELS
+# 1. LOAD DATA AND MODELS
 # ============================================
 
 @st.cache_resource
@@ -80,14 +86,16 @@ def load_model():
     """Load the trained EBM model"""
     try:
         model = joblib.load('ebm_poverty_model_final.pkl')
+        st.success("✅ Model loaded successfully!")
         return model
-    except:
-        try:
-            model = joblib.load('ebm_poverty_model.pkl')
-            return model
-        except:
-            st.error("⚠️ Model not found! Please train the EBM model first.")
-            return None
+    except FileNotFoundError:
+        st.error("❌ Model file not found: ebm_poverty_model_final.pkl")
+        st.write("Available files in directory:")
+        st.write(os.listdir('.'))
+        return None
+    except Exception as e:
+        st.error(f"❌ Error loading model: {e}")
+        return None
 
 @st.cache_data
 def load_data():
@@ -192,6 +200,8 @@ if model is not None:
     st.sidebar.metric("Accuracy", "100%", "✅")
     st.sidebar.metric("Features", "7", "✅")
     st.sidebar.metric("Test Samples", "955", "✅")
+else:
+    st.sidebar.warning("⚠️ Model not loaded")
 
 st.sidebar.markdown("---")
 
