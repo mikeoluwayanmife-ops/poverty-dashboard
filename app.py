@@ -1,3 +1,13 @@
+# ============================================
+# DEBUG: LIST FILES
+# ============================================
+
+import os
+st.write("### 🔍 Debug Info")
+st.write(f"Current directory: {os.getcwd()}")
+files = os.listdir('.')
+st.write(f"Files in directory: {files}")
+
 # UPDATED: June 30, 2026 - Fixed syntax errors
 
 import streamlit as st
