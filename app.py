@@ -159,111 +159,129 @@ if page == "Home":
         st.metric("States Covered", "37")
 
 # ============================================
-# POVERTY MAPS PAGE (SIMPLIFIED & WORKING)
+# POVERTY MAPS PAGE (FIXED)
 # ============================================
 
 elif page == "Poverty Maps":
     st.subheader("📊 Poverty Distribution in Nigeria")
     st.markdown("Visualizations showing poverty distribution and related factors across Nigeria")
     
-    map_type = st.selectbox(
-        "Select Indicator",
-        ["Poverty Rate", "Flood Risk", "Conflict Level", "Internet Penetration", "Farming Dependency"]
-    )
+    # Map display names to actual column names
+    column_mapping = {
+        "Poverty Rate": "Poverty_Rate",
+        "Flood Risk": "Flood_Risk",
+        "Conflict Level": "Conflict_Level",
+        "Internet Penetration": "Internet_Penetration",
+        "Farming Dependency": "Farming_Dependency"
+    }
+    
+    # Display options with spaces (user-friendly)
+    display_options = list(column_mapping.keys())
+    selected_display = st.selectbox("Select Indicator", display_options)
+    
+    # Get the actual column name
+    selected_column = column_mapping[selected_display]
     
     map_data = context_data.copy()
     
-    if map_type in ["Poverty Rate", "Internet Penetration", "Farming Dependency"]:
-        sorted_data = map_data.sort_values(map_type, ascending=False)
+    # Check if the column exists
+    if selected_column not in map_data.columns:
+        st.error(f"❌ Column '{selected_column}' not found in data!")
+        st.write("Available columns:", list(map_data.columns))
     else:
-        sorted_data = map_data.sort_values('State')
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.subheader(f"{map_type} by State")
+        # Sort data by the selected column
+        if selected_column in ["Poverty_Rate", "Internet_Penetration", "Farming_Dependency"]:
+            sorted_data = map_data.sort_values(selected_column, ascending=False)
+        else:
+            sorted_data = map_data.sort_values('State')
         
-        if map_type in ["Poverty Rate", "Internet Penetration", "Farming Dependency"]:
-            top_15 = sorted_data.head(15)
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.subheader(f"{selected_display} by State")
             
-            if map_type == "Poverty Rate":
-                color_scale = 'Reds'
-                title_suffix = "(Higher = More Poverty)"
-            elif map_type == "Internet Penetration":
-                color_scale = 'Blues'
-                title_suffix = "(Higher = Better Access)"
+            if selected_column in ["Poverty_Rate", "Internet_Penetration", "Farming_Dependency"]:
+                top_15 = sorted_data.head(15)
+                
+                if selected_column == "Poverty_Rate":
+                    color_scale = 'Reds'
+                    title_suffix = "(Higher = More Poverty)"
+                elif selected_column == "Internet_Penetration":
+                    color_scale = 'Blues'
+                    title_suffix = "(Higher = Better Access)"
+                else:
+                    color_scale = 'Greens'
+                    title_suffix = "(Higher = More Dependent)"
+                
+                fig = px.bar(
+                    top_15,
+                    x=selected_column,
+                    y='State',
+                    orientation='h',
+                    title=f"{selected_display} {title_suffix}",
+                    color=selected_column,
+                    color_continuous_scale=color_scale,
+                    height=500,
+                    text=selected_column
+                )
+                fig.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+                fig.update_layout(
+                    xaxis_title=selected_display,
+                    yaxis_title="State",
+                    yaxis={'categoryorder': 'total ascending'},
+                    showlegend=False
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                
             else:
-                color_scale = 'Greens'
-                title_suffix = "(Higher = More Dependent)"
-            
-            fig = px.bar(
-                top_15,
-                x=map_type,
-                y='State',
-                orientation='h',
-                title=f"{map_type} {title_suffix}",
-                color=map_type,
-                color_continuous_scale=color_scale,
-                height=500,
-                text=map_type
-            )
-            fig.update_traces(texttemplate='%{text:.1f}', textposition='outside')
-            fig.update_layout(
-                xaxis_title=map_type,
-                yaxis_title="State",
-                yaxis={'categoryorder': 'total ascending'},
-                showlegend=False
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-        else:
-            fig = px.pie(
-                sorted_data,
-                names=map_type,
-                title=f"{map_type} Distribution Across States",
-                color=map_type,
-                color_discrete_sequence=['#2ecc71', '#f39c12', '#e67e22', '#e74c3c'],
-                height=450
-            )
-            fig.update_traces(textposition='inside', textinfo='percent+label')
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        st.subheader("📋 State Rankings")
-        st.markdown("---")
+                # For categorical data: show pie chart
+                fig = px.pie(
+                    sorted_data,
+                    names=selected_column,
+                    title=f"{selected_display} Distribution Across States",
+                    color=selected_column,
+                    color_discrete_sequence=['#2ecc71', '#f39c12', '#e67e22', '#e74c3c'],
+                    height=450
+                )
+                fig.update_traces(textposition='inside', textinfo='percent+label')
+                st.plotly_chart(fig, use_container_width=True)
         
-        if map_type in ["Poverty Rate", "Internet Penetration", "Farming Dependency"]:
-            top_10 = sorted_data.head(10)[['State', map_type]]
-            st.markdown("**🔴 Highest Values:**")
-            st.dataframe(top_10.set_index('State'), use_container_width=True)
-            
-            bottom_10 = sorted_data.tail(10)[['State', map_type]]
-            st.markdown("**🟢 Lowest Values:**")
-            st.dataframe(bottom_10.set_index('State'), use_container_width=True)
-            
+        with col2:
+            st.subheader("📋 State Rankings")
             st.markdown("---")
-            st.markdown("**📊 Summary Statistics:**")
-            stats = {
-                "Mean": map_data[map_type].mean(),
-                "Median": map_data[map_type].median(),
-                "Min": map_data[map_type].min(),
-                "Max": map_data[map_type].max(),
-                "Std Dev": map_data[map_type].std()
-            }
-            for key, val in stats.items():
-                st.metric(key, f"{val:.1f}")
             
-        else:
-            cat_counts = map_data[map_type].value_counts().reset_index()
-            cat_counts.columns = [map_type, 'Count']
-            st.dataframe(cat_counts, use_container_width=True)
-            
-            st.markdown("---")
-            st.markdown("**📊 States by Category:**")
-            for category in sorted(map_data[map_type].unique()):
-                states = map_data[map_data[map_type] == category]['State'].tolist()
-                with st.expander(f"{category} ({len(states)} states)"):
-                    st.write(", ".join(states))
+            if selected_column in ["Poverty_Rate", "Internet_Penetration", "Farming_Dependency"]:
+                top_10 = sorted_data.head(10)[['State', selected_column]]
+                st.markdown("**🔴 Highest Values:**")
+                st.dataframe(top_10.set_index('State'), use_container_width=True)
+                
+                bottom_10 = sorted_data.tail(10)[['State', selected_column]]
+                st.markdown("**🟢 Lowest Values:**")
+                st.dataframe(bottom_10.set_index('State'), use_container_width=True)
+                
+                st.markdown("---")
+                st.markdown("**📊 Summary Statistics:**")
+                stats = {
+                    "Mean": map_data[selected_column].mean(),
+                    "Median": map_data[selected_column].median(),
+                    "Min": map_data[selected_column].min(),
+                    "Max": map_data[selected_column].max(),
+                    "Std Dev": map_data[selected_column].std()
+                }
+                for key, val in stats.items():
+                    st.metric(key, f"{val:.1f}")
+                
+            else:
+                cat_counts = map_data[selected_column].value_counts().reset_index()
+                cat_counts.columns = [selected_display, 'Count']
+                st.dataframe(cat_counts, use_container_width=True)
+                
+                st.markdown("---")
+                st.markdown("**📊 States by Category:**")
+                for category in sorted(map_data[selected_column].unique()):
+                    states = map_data[map_data[selected_column] == category]['State'].tolist()
+                    with st.expander(f"{category} ({len(states)} states)"):
+                        st.write(", ".join(states))
 
 # ============================================
 # PREDICTION DASHBOARD
